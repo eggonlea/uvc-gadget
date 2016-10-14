@@ -2147,6 +2147,7 @@ usage(const char *argv0)
 	fprintf(stderr, "Available options are\n");
 	fprintf(stderr, " -b		Use bulk mode\n");
 	fprintf(stderr, " -d		Do not use any real V4L2 capture device\n");
+	fprintf(stderr, " -D <usec>	Microseconds to delay between all events\n");
 	fprintf(stderr, " -f <format>    Select frame format\n\t"
 				"0 = V4L2_PIX_FMT_YUYV\n\t"
 				"1 = V4L2_PIX_FMT_MJPEG\n");
@@ -2185,6 +2186,7 @@ main(int argc, char *argv[])
 	int ret, opt, nfds;
 	int bulk_mode = 0;
 	int dummy_data_gen_mode = 0;
+	int delay = 0;
 	/* Frame format/resolution related params. */
 	int default_format = 0;		/* V4L2_PIX_FMT_YUYV */
 	int default_resolution = 0;	/* VGA 360p */
@@ -2195,7 +2197,7 @@ main(int argc, char *argv[])
 	enum usb_device_speed speed = USB_SPEED_SUPER;	/* High-Speed */
 	enum io_method uvc_io_method = IO_METHOD_USERPTR;
 
-	while ((opt = getopt(argc, argv, "bdf:hi:m:n:o:r:s:t:u:v:")) != -1) {
+	while ((opt = getopt(argc, argv, "bdD:f:hi:m:n:o:r:s:t:u:v:")) != -1) {
 		switch (opt) {
 		case 'b':
 			bulk_mode = 1;
@@ -2203,6 +2205,11 @@ main(int argc, char *argv[])
 
 		case 'd':
 			dummy_data_gen_mode = 1;
+			break;
+
+		case 'D':
+			delay = atoi(optarg);
+			printf("Requested delay = %d usec\n", delay);
 			break;
 
 		case 'f':
@@ -2463,6 +2470,8 @@ main(int argc, char *argv[])
 		if (!dummy_data_gen_mode && !mjpeg_image)
 			if (FD_ISSET(vdev->v4l2_fd, &fdsv))
 				v4l2_process_data(vdev);
+		if (delay > 0)
+			usleep(delay);
 	}
 
 	if (!dummy_data_gen_mode && !mjpeg_image && vdev->is_streaming) {
