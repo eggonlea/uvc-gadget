@@ -45,6 +45,8 @@
 #define CLEAR(x)	memset (&(x), 0, sizeof (x))
 #define max(a, b)	(((a) > (b)) ? (a) : (b))
 
+#include "finstrument-function.h"
+
 #define clamp(val, min, max) ({                 \
         typeof(val) __val = (val);              \
         typeof(min) __min = (min);              \
