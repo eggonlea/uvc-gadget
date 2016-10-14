@@ -53,17 +53,17 @@ int i=0; \
 while (i++ < func_level) { \
 printf("    "); \
 } \
-printf(fmt "\n", ##__VA_ARGS__); \
+printf(fmt, ##__VA_ARGS__); \
 } while(0)
 
 #define FUNC_ENTER(fmt, ...)	do { \
-PRINTF("{  %s " fmt, __func__, ##__VA_ARGS__); \
+PRINTF("{  %s " fmt "\n", __func__, ##__VA_ARGS__); \
 func_level++; \
 } while(0)
 
 #define FUNC_EXIT(fmt, ...)	do { \
 func_level--; \
-PRINTF(" } %s " fmt, __func__, ##__VA_ARGS__); \
+PRINTF(" } %s " fmt "\n", __func__, ##__VA_ARGS__); \
 } while(0)
 
 #else
@@ -1825,8 +1825,10 @@ uvc_events_process_streaming(struct uvc_device *dev, uint8_t req, uint8_t cs,
 
 	PRINTF("streaming request (req %02x cs %02x)\n", req, cs);
 
-	if (cs != UVC_VS_PROBE_CONTROL && cs != UVC_VS_COMMIT_CONTROL)
+	if (cs != UVC_VS_PROBE_CONTROL && cs != UVC_VS_COMMIT_CONTROL) {
+		PRINTF("ignore unsupported cs %02x\n", cs);
 		goto exit;
+	}
 
 	ctrl = (struct uvc_streaming_control *)&resp->data;
 	resp->length = sizeof *ctrl;
@@ -1909,7 +1911,7 @@ uvc_events_process_setup(struct uvc_device *dev, struct usb_ctrlrequest *ctrl,
 	dev->control = 0;
 
 #ifdef ENABLE_USB_REQUEST_DEBUG
-	PRINTF("\nbRequestType %02x bRequest %02x wValue %04x wIndex %04x "
+	PRINTF("bRequestType %02x bRequest %02x wValue %04x wIndex %04x "
 		"wLength %04x\n", ctrl->bRequestType, ctrl->bRequest,
 		ctrl->wValue, ctrl->wIndex, ctrl->wLength);
 #endif
@@ -2106,7 +2108,7 @@ uvc_events_process(struct uvc_device *dev)
 	memset(&resp, 0, sizeof resp);
 	resp.length = -EL2HLT;
 
-	PRINTF("v4l2_event.type=%d", v4l2_event.type);
+	PRINTF("v4l2_event.type=0x%08x", v4l2_event.type);
 	switch (v4l2_event.type) {
 	case UVC_EVENT_CONNECT:
 		goto exit;
