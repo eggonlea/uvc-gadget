@@ -38,6 +38,11 @@
 
 #include "./android_kernel/drivers/usb/gadget/function/uvc.h"
 
+/* Enable debug prints. */
+#define DEBUG
+#define ENABLE_BUFFER_DEBUG
+#define ENABLE_USB_REQUEST_DEBUG
+
 //#include "finstrument-function.h"
 #ifdef DEBUG
 
@@ -65,10 +70,6 @@ PRINTF(" } %s " fmt, __func__, ##__VA_ARGS__); \
 #define FUNC_ENTER(...)
 #define FUNC_EXIT(...)
 #endif
-
-/* Enable debug prints. */
-#undef ENABLE_BUFFER_DEBUG
-#undef ENABLE_USB_REQUEST_DEBUG
 
 #define CLEAR(x)	memset (&(x), 0, sizeof (x))
 #define max(a, b)	(((a) > (b)) ? (a) : (b))
@@ -1016,8 +1017,10 @@ uvc_video_process(struct uvc_device *dev)
 	 * Return immediately if UVC video output device has not started
 	 * streaming yet.
 	 */
-	if (!dev->is_streaming)
+	if (!dev->is_streaming) {
+		PRINTF("Please start streaming first");
 		goto exit;
+	}
 
 	/* Prepare a v4l2 buffer to be dequeued from UVC domain. */
 	CLEAR(ubuf);
@@ -2103,6 +2106,7 @@ uvc_events_process(struct uvc_device *dev)
 	memset(&resp, 0, sizeof resp);
 	resp.length = -EL2HLT;
 
+	PRINTF("v4l2_event.type=%d", v4l2_event.type);
 	switch (v4l2_event.type) {
 	case UVC_EVENT_CONNECT:
 		goto exit;
