@@ -38,6 +38,13 @@
 
 #include "./android_kernel/drivers/usb/gadget/function/uvc.h"
 
+//#include "finstrument-function.h"
+#ifdef DEBUG
+#define FOOTPRINT	printf("%s()\n", __func__)
+#else
+#define FOOTPRINT
+#endif
+
 /* Enable debug prints. */
 #undef ENABLE_BUFFER_DEBUG
 #undef ENABLE_USB_REQUEST_DEBUG
@@ -45,7 +52,6 @@
 #define CLEAR(x)	memset (&(x), 0, sizeof (x))
 #define max(a, b)	(((a) > (b)) ? (a) : (b))
 
-#include "finstrument-function.h"
 
 #define clamp(val, min, max) ({                 \
         typeof(val) __val = (val);              \
@@ -214,6 +220,7 @@ static int uvc_video_stream(struct uvc_device *dev, int enable);
 static int
 v4l2_uninit_device(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	unsigned int i;
 	int ret;
 
@@ -241,6 +248,7 @@ v4l2_uninit_device(struct v4l2_device *dev)
 static int
 v4l2_reqbufs_mmap(struct v4l2_device *dev, int nbufs)
 {
+	FOOTPRINT;
 	struct v4l2_requestbuffers req;
 	unsigned int i = 0;
 	int ret;
@@ -326,6 +334,7 @@ err:
 static int
 v4l2_reqbufs_userptr(struct v4l2_device *dev, int nbufs)
 {
+	FOOTPRINT;
 	struct v4l2_requestbuffers req;
 	int ret;
 
@@ -354,6 +363,7 @@ v4l2_reqbufs_userptr(struct v4l2_device *dev, int nbufs)
 static int
 v4l2_reqbufs(struct v4l2_device *dev, int nbufs)
 {
+	FOOTPRINT;
 	int ret = 0;
 
 	switch (dev->io) {
@@ -376,6 +386,7 @@ v4l2_reqbufs(struct v4l2_device *dev, int nbufs)
 static int
 v4l2_qbuf_mmap(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	unsigned int i;
 	int ret;
 
@@ -402,6 +413,7 @@ v4l2_qbuf_mmap(struct v4l2_device *dev)
 static int
 v4l2_qbuf(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	int ret = 0;
 
 	switch (dev->io) {
@@ -425,6 +437,7 @@ v4l2_qbuf(struct v4l2_device *dev)
 static int
 v4l2_process_data(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	int ret;
 	struct v4l2_buffer vbuf;
 	struct v4l2_buffer ubuf;
@@ -521,6 +534,7 @@ v4l2_process_data(struct v4l2_device *dev)
 static int
 v4l2_get_format(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	struct v4l2_format fmt;
 	int ret;
 
@@ -544,6 +558,7 @@ v4l2_get_format(struct v4l2_device *dev)
 static int
 v4l2_set_format(struct v4l2_device *dev, struct v4l2_format *fmt)
 {
+	FOOTPRINT;
 	int ret;
 
 	ret = ioctl(dev->v4l2_fd, VIDIOC_S_FMT, fmt);
@@ -563,6 +578,7 @@ v4l2_set_format(struct v4l2_device *dev, struct v4l2_format *fmt)
 static int
 v4l2_set_ctrl(struct v4l2_device *dev, int new_val, int ctrl)
 {
+	FOOTPRINT;
 	struct v4l2_queryctrl queryctrl;
 	struct v4l2_control control;
 	int ret;
@@ -615,6 +631,7 @@ v4l2_set_ctrl(struct v4l2_device *dev, int new_val, int ctrl)
 static int
 v4l2_start_capturing(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	int ret;
 
@@ -633,6 +650,7 @@ v4l2_start_capturing(struct v4l2_device *dev)
 static int
 v4l2_stop_capturing(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	enum v4l2_buf_type type;
 	int ret;
 
@@ -659,6 +677,7 @@ v4l2_stop_capturing(struct v4l2_device *dev)
 static int
 v4l2_open(struct v4l2_device **v4l2, char *devname, struct v4l2_format *s_fmt)
 {
+	FOOTPRINT;
 	struct v4l2_device *dev;
 	struct v4l2_capability cap;
 	int fd;
@@ -734,6 +753,7 @@ err:
 static void
 v4l2_close(struct v4l2_device *dev)
 {
+	FOOTPRINT;
 	close(dev->v4l2_fd);
 	free(dev);
 }
@@ -745,6 +765,7 @@ v4l2_close(struct v4l2_device *dev)
 static int
 uvc_video_set_format(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	struct v4l2_format fmt;
 	int ret;
 
@@ -774,6 +795,7 @@ uvc_video_set_format(struct uvc_device *dev)
 static int
 uvc_video_stream(struct uvc_device *dev, int enable)
 {
+	FOOTPRINT;
 	int type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 	int ret;
 
@@ -807,6 +829,7 @@ uvc_video_stream(struct uvc_device *dev, int enable)
 static int
 uvc_uninit_device(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	unsigned int i;
 	int ret;
 
@@ -840,6 +863,7 @@ uvc_uninit_device(struct uvc_device *dev)
 static int
 uvc_open(struct uvc_device **uvc, char *devname)
 {
+	FOOTPRINT;
 	struct uvc_device *dev;
 	struct v4l2_capability cap;
 	int fd;
@@ -886,6 +910,7 @@ err:
 static void
 uvc_close(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	close(dev->uvc_fd);
 	free(dev->imgdata);
 	free(dev);
@@ -898,6 +923,7 @@ uvc_close(struct uvc_device *dev)
 static void
 uvc_video_fill_buffer(struct uvc_device *dev, struct v4l2_buffer *buf)
 {
+	FOOTPRINT;
 	unsigned int bpl;
 	unsigned int i;
 
@@ -922,6 +948,7 @@ uvc_video_fill_buffer(struct uvc_device *dev, struct v4l2_buffer *buf)
 static int
 uvc_video_process(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	struct v4l2_buffer ubuf;
 	struct v4l2_buffer vbuf;
 	unsigned int i;
@@ -1053,6 +1080,7 @@ uvc_video_process(struct uvc_device *dev)
 static int
 uvc_video_qbuf_mmap(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	unsigned int i;
 	int ret;
 
@@ -1083,6 +1111,7 @@ uvc_video_qbuf_mmap(struct uvc_device *dev)
 static int
 uvc_video_qbuf_userptr(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	unsigned int i;
 	int ret;
 
@@ -1115,6 +1144,7 @@ uvc_video_qbuf_userptr(struct uvc_device *dev)
 static int
 uvc_video_qbuf(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	int ret = 0;
 
 	switch (dev->io) {
@@ -1137,6 +1167,7 @@ uvc_video_qbuf(struct uvc_device *dev)
 static int
 uvc_video_reqbufs_mmap(struct uvc_device *dev, int nbufs)
 {
+	FOOTPRINT;
 	struct v4l2_requestbuffers rb;
 	unsigned int i;
 	int ret;
@@ -1222,6 +1253,7 @@ err:
 static int
 uvc_video_reqbufs_userptr(struct uvc_device *dev, int nbufs)
 {
+	FOOTPRINT;
 	struct v4l2_requestbuffers rb;
 	unsigned int i, j, bpl, payload_size;
 	int ret;
@@ -1297,6 +1329,7 @@ err:
 static int
 uvc_video_reqbufs(struct uvc_device *dev, int nbufs)
 {
+	FOOTPRINT;
 	int ret = 0;
 
 	switch (dev->io) {
@@ -1328,6 +1361,7 @@ uvc_video_reqbufs(struct uvc_device *dev, int nbufs)
 static int
 uvc_handle_streamon_event(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	int ret;
 
 	ret = uvc_video_reqbufs(dev, dev->nbufs);
@@ -1386,6 +1420,7 @@ uvc_fill_streaming_control(struct uvc_device *dev,
 			   struct uvc_streaming_control *ctrl,
 			   int iframe, int iformat)
 {
+	FOOTPRINT;
 	const struct uvc_format_info *format;
 	const struct uvc_frame_info *frame;
 	unsigned int nframes;
@@ -1440,10 +1475,12 @@ uvc_events_process_standard(struct uvc_device *dev,
 			    struct usb_ctrlrequest *ctrl,
 			    struct uvc_request_data *resp)
 {
-	printf("standard request\n");
+	FOOTPRINT;
+	printf("ignore standard request\n");
 	(void)dev;
 	(void)ctrl;
-	(void)resp;
+	//(void)resp;
+	resp->length=0;
 }
 
 static void
@@ -1451,6 +1488,7 @@ uvc_events_process_control(struct uvc_device *dev, uint8_t req,
 			   uint8_t cs, uint8_t entity_id,
 			   uint8_t len, struct uvc_request_data *resp)
 {
+	FOOTPRINT;
 	switch (entity_id) {
 	case 0:
 		switch (cs) {
@@ -1705,6 +1743,7 @@ static void
 uvc_events_process_streaming(struct uvc_device *dev, uint8_t req, uint8_t cs,
 			     struct uvc_request_data *resp)
 {
+	FOOTPRINT;
 	struct uvc_streaming_control *ctrl;
 
 	printf("streaming request (req %02x cs %02x)\n", req, cs);
@@ -1756,6 +1795,7 @@ static void
 uvc_events_process_class(struct uvc_device *dev, struct usb_ctrlrequest *ctrl,
 			 struct uvc_request_data *resp)
 {
+	FOOTPRINT;
 	if ((ctrl->bRequestType & USB_RECIP_MASK) != USB_RECIP_INTERFACE)
 		return;
 
@@ -1773,6 +1813,7 @@ uvc_events_process_class(struct uvc_device *dev, struct usb_ctrlrequest *ctrl,
 		break;
 
 	default:
+		resp->length=0;
 		break;
 	}
 }
@@ -1781,6 +1822,7 @@ static void
 uvc_events_process_setup(struct uvc_device *dev, struct usb_ctrlrequest *ctrl,
 			 struct uvc_request_data *resp)
 {
+	FOOTPRINT;
 	dev->control = 0;
 
 #ifdef ENABLE_USB_REQUEST_DEBUG
@@ -1808,6 +1850,7 @@ uvc_events_process_control_data(struct uvc_device *dev,
 				uint8_t cs, uint8_t entity_id,
 				struct uvc_request_data *data)
 {
+	FOOTPRINT;
 	switch (entity_id) {
 	/* Processing unit 'UVC_VC_PROCESSING_UNIT'. */
 	case 2:
@@ -1861,6 +1904,7 @@ uvc_events_process_control_data(struct uvc_device *dev,
 static int
 uvc_events_process_data(struct uvc_device *dev, struct uvc_request_data *data)
 {
+	FOOTPRINT;
 	struct uvc_streaming_control *target;
 	struct uvc_streaming_control *ctrl;
 	struct v4l2_format fmt;
@@ -1958,6 +2002,7 @@ err:
 static void
 uvc_events_process(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	struct v4l2_event v4l2_event;
 	struct uvc_event *uvc_event = (void *)&v4l2_event.u.data;
 	struct uvc_request_data resp;
@@ -2030,6 +2075,7 @@ uvc_events_process(struct uvc_device *dev)
 static void
 uvc_events_init(struct uvc_device *dev)
 {
+	FOOTPRINT;
 	struct v4l2_event_subscription sub;
 	unsigned int payload_size;
 
@@ -2068,6 +2114,7 @@ uvc_events_init(struct uvc_device *dev)
 static void
 image_load(struct uvc_device *dev, const char *img)
 {
+	FOOTPRINT;
 	int fd = -1;
 
 	if (img == NULL)
@@ -2095,6 +2142,7 @@ image_load(struct uvc_device *dev, const char *img)
 static void
 usage(const char *argv0)
 {
+	FOOTPRINT;
 	fprintf(stderr, "Usage: %s [options]\n", argv0);
 	fprintf(stderr, "Available options are\n");
 	fprintf(stderr, " -b		Use bulk mode\n");
@@ -2125,6 +2173,7 @@ usage(const char *argv0)
 int
 main(int argc, char *argv[])
 {
+	FOOTPRINT;
 	struct uvc_device *udev;
 	struct v4l2_device *vdev;
 	struct timeval tv;
