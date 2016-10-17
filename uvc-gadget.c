@@ -1018,7 +1018,7 @@ uvc_video_process(struct uvc_device *dev)
 	 * streaming yet.
 	 */
 	if (!dev->is_streaming) {
-		PRINTF("Please start streaming first");
+		PRINTF("Please start streaming first\n");
 		goto exit;
 	}
 
@@ -1555,7 +1555,7 @@ uvc_events_process_standard(struct uvc_device *dev,
 	(void)dev;
 	(void)ctrl;
 	//(void)resp;
-	resp->length=0;
+	resp->length = 0;
 	FUNC_EXIT("");
 }
 
@@ -1895,7 +1895,7 @@ uvc_events_process_class(struct uvc_device *dev, struct usb_ctrlrequest *ctrl,
 		break;
 
 	default:
-		resp->length=0;
+		resp->length = 0;
 		break;
 	}
 
@@ -2108,7 +2108,7 @@ uvc_events_process(struct uvc_device *dev)
 	memset(&resp, 0, sizeof resp);
 	resp.length = -EL2HLT;
 
-	PRINTF("v4l2_event.type=0x%08x", v4l2_event.type);
+	PRINTF("v4l2_event.type=0x%08x\n", v4l2_event.type);
 	switch (v4l2_event.type) {
 	case UVC_EVENT_CONNECT:
 		goto exit;
@@ -2555,10 +2555,13 @@ main(int argc, char *argv[])
 
 		if (!dummy_data_gen_mode && !mjpeg_image) {
 			nfds = max(vdev->v4l2_fd, udev->uvc_fd);
-			ret = select(nfds + 1, &fdsv, &dfds, &efds, &tv);
+			ret = select(nfds + 1, &fdsv,
+					 udev->is_streaming ? &dfds : NULL,
+					 &efds, &tv);
 		} else {
 			ret = select(udev->uvc_fd + 1, NULL,
-					&dfds, &efds, NULL);
+					udev->is_streaming ? &dfds : NULL,
+					&efds, NULL);
 		}
 
 		if (-1 == ret) {
