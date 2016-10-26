@@ -2,6 +2,7 @@
  * UVC gadget test application
  *
  * Copyright (C) 2010 Ideas on board SPRL <laurent.pinchart@ideasonboard.com>
+ * Copyright (C) 2016 Essential Products <li@essential.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,28 +41,40 @@
 
 /* Enable debug prints. */
 #define DEBUG
+
+//#include "finstrument-function.h"
+/* TODO: remove this ugly implementation as long as finstrument-function
+ * works with Android (clang) toolchain */
+#define ENABLE_FUNC_FOOTPRINT
+
 #define ENABLE_BUFFER_DEBUG
 #define ENABLE_USB_REQUEST_DEBUG
 
-//#include "finstrument-function.h"
 #ifdef DEBUG
 
+static int verbose_mode;
 static int func_level;
 
 #define PRINTF(fmt, ...)	do { \
-int i=0; \
-while (i++ < func_level) { \
+int PRINTF_i=0; \
+while (PRINTF_i++ < func_level) { \
 printf("    "); \
 } \
 printf(fmt, ##__VA_ARGS__); \
 } while(0)
 
+#endif
+
+#ifdef ENABLE_FUNC_FOOTPRINT
+
 #define FUNC_ENTER(fmt, ...)	do { \
+if (!verbose_mode) break; \
 PRINTF("{  %s " fmt "\n", __func__, ##__VA_ARGS__); \
 func_level++; \
 } while(0)
 
 #define FUNC_EXIT(fmt, ...)	do { \
+if (!verbose_mode) break; \
 func_level--; \
 PRINTF(" } %s " fmt "\n", __func__, ##__VA_ARGS__); \
 } while(0)
@@ -293,6 +306,8 @@ v4l2_reqbufs_mmap(struct v4l2_device *dev, int nbufs)
 		goto exit;
 	}
 
+	PRINTF("V4L2: %u buffers allocated.\n", req.count);
+
 	if (!req.count)
 		goto exit;
 
@@ -345,7 +360,6 @@ v4l2_reqbufs_mmap(struct v4l2_device *dev, int nbufs)
 	}
 
 	dev->nbufs = req.count;
-	PRINTF("V4L2: %u buffers allocated.\n", req.count);
 
 	goto exit;
 
@@ -990,8 +1004,8 @@ uvc_video_fill_buffer(struct uvc_device *dev, struct v4l2_buffer *buf)
 		/* Fill the buffer with video data. */
 		bpl = dev->width * 2;
 		for (i = 0; i < dev->height; ++i)
-			memset(dev->mem[buf->index].start + i*bpl,
-					dev->color++, bpl);
+			//memset(dev->mem[buf->index].start + i*bpl,
+			//		dev->color++, bpl);
 
 		buf->bytesused = bpl * dev->height;
 		break;
@@ -1256,6 +1270,8 @@ uvc_video_reqbufs_mmap(struct uvc_device *dev, int nbufs)
 		goto err;
 	}
 
+	PRINTF("UVC: %d buffers allocated\n", rb.count);
+
 	if (!rb.count)
 		goto exit;
 
@@ -1293,6 +1309,8 @@ uvc_video_reqbufs_mmap(struct uvc_device *dev, int nbufs)
 					PROT_READ | PROT_WRITE /* required */,
 					MAP_SHARED /* recommended */,
 					dev->uvc_fd, dev->mem[i].buf.m.offset);
+		PRINTF("UVC: [%d]: MMAP(len=%d, off=%d) = %p\n", i,
+			dev->mem[i].buf.length, dev->mem[i].buf.m.offset, dev->mem[i].start);
 
 		if (MAP_FAILED == dev->mem[i].start) {
 			PRINTF("UVC: Unable to map buffer %u: %s (%d).\n", i,
@@ -1308,7 +1326,6 @@ uvc_video_reqbufs_mmap(struct uvc_device *dev, int nbufs)
 	}
 
 	dev->nbufs = rb.count;
-	PRINTF("UVC: %u buffers allocated.\n", rb.count);
 
 	goto exit;
 
@@ -2162,6 +2179,7 @@ uvc_events_process(struct uvc_device *dev)
 		goto exit;
 	}
 exit:
+	PRINTF("resp.length = %d\n", resp.length);
 	FUNC_EXIT("");
 }
 
@@ -2258,13 +2276,18 @@ usage(const char *argv0)
 	fprintf(stderr, " -r <resolution> Select frame resolution:\n\t"
 				"0 = 360p, VGA (640x360)\n\t"
 				"1 = 720p, WXGA (1280x720)\n");
-	fprintf(stderr, " -s <speed>	Select USB bus speed (b/w 0 and 2)\n\t"
-				"0 = Full Speed (FS)\n\t"
-				"1 = High Speed (HS)\n\t"
-				"2 = Super Speed (SS)\n");
+	fprintf(stderr, " -s <speed>	Select USB bus speed (b/w 0 and 6)\n\t"
+				"0 = Unknown (enumerating)\n\t"
+				"1 = Low Speed (USB 1.1)\n\t"
+				"2 = Full Speed (USB 1.1)\n\t"
+				"3 = High Speed (USB 2.0)\n\t"
+				"4 = Wireless (USB 2.5)\n\t"
+				"5 = Super Speed (USB 3.0) - default\n\t"
+				"6 = Super Speed Plus (USB 3.1)\n");
 	fprintf(stderr, " -t		Streaming burst (b/w 0 and 15)\n");
 	fprintf(stderr, " -u device	UVC Video Output device\n");
 	fprintf(stderr, " -v device	V4L2 Video Capture device\n");
+	fprintf(stderr, " -V		Verbose mode (likely to cause timeout issue\n");
 
 	FUNC_EXIT("");
 }
@@ -2296,7 +2319,7 @@ main(int argc, char *argv[])
 	enum usb_device_speed speed = USB_SPEED_SUPER;	/* High-Speed */
 	enum io_method uvc_io_method = IO_METHOD_USERPTR;
 
-	while ((opt = getopt(argc, argv, "bdD:f:hi:m:n:o:r:s:t:u:v:")) != -1) {
+	while ((opt = getopt(argc, argv, "bdD:f:hi:m:n:o:r:s:t:u:v:V")) != -1) {
 		switch (opt) {
 		case 'b':
 			bulk_mode = 1;
@@ -2404,6 +2427,9 @@ main(int argc, char *argv[])
 			v4l2_devname = optarg;
 			break;
 
+		case 'V':
+			verbose_mode = 1;
+
 		default:
 			PRINTF("Invalid option '-%c'\n", opt);
 			usage(argv[0]);
@@ -2466,6 +2492,8 @@ main(int argc, char *argv[])
 	udev->mult = mult;
 	udev->burst = burst;
 	udev->speed = speed;
+	PRINTF("usb speed: %d\n", udev->speed);
+	PRINTF("uvc io method: %d\n", udev->io);
 
 	if (dummy_data_gen_mode || mjpeg_image)
 		/* UVC standalone setup. */
@@ -2505,7 +2533,7 @@ main(int argc, char *argv[])
 		if (bulk_mode)
 			udev->maxpkt = 512;
 		else
-			udev->maxpkt = 1024;
+			udev->maxpkt = 512; //1024;
 		break;
 
 	case USB_SPEED_SUPER:
@@ -2517,6 +2545,7 @@ main(int argc, char *argv[])
 			udev->maxpkt = 1024;
 		break;
 	}
+	PRINTF("uvc maxpkt: %d\n", udev->maxpkt);
 
 	if (!dummy_data_gen_mode && !mjpeg_image &&
 	   (IO_METHOD_MMAP == vdev->io)) {
